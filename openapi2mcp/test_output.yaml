@@ -1,0 +1,55 @@
+config:
+  logging:
+    log_statistics: true
+  mode: conversion-listener
+  server:
+    forward_client_headers: true
+    timeout: 60000
+  tools:
+  - annotations:
+      open_world_hint: true
+    description: Create new member
+    method: POST
+    path: /miles/members
+    request_body:
+      content:
+        application/json:
+          schema:
+            properties:
+              email:
+                format: email
+                type: string
+              name:
+                type: string
+            required:
+            - name
+            - email
+            type: object
+    title: createMember
+  - annotations:
+      read_only_hint: true
+    description: Get member by id
+    method: GET
+    parameters:
+    - description: Member ID
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+    - description: Comma-separated list of related resources to include
+      in: query
+      name: include
+      required: false
+      schema:
+        type: string
+    path: /miles/members/{id}
+    title: getMemberById
+  - annotations:
+      read_only_hint: true
+    description: Get tiers
+    method: GET
+    path: /miles/tiers
+    title: getTiers
+name: ai-mcp-proxy
+route: airmiles-mcp-route

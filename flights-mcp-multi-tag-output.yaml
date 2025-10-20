@@ -1,0 +1,66 @@
+flights:
+  config:
+    mode: conversion-listener
+    server:
+      forward_client_headers: true
+      tags:
+      - flights
+      timeout: 60000
+    tools:
+    - annotations:
+        read_only_hint: true
+        title: get-flights
+      description: Get KongAir planned flights
+      method: GET
+      parameters:
+      - description: Filter by date (defaults to current day)
+        in: query
+        name: date
+        required: false
+        schema:
+          format: date
+          type: string
+      path: /flights
+    - annotations:
+        read_only_hint: true
+        title: get-flight-by-number
+      description: Get a specific flight by flight number
+      method: GET
+      parameters:
+      - description: The flight number
+        in: path
+        name: flightNumber
+        required: true
+        schema:
+          type: string
+      path: /flights/{flightNumber}
+    - annotations:
+        read_only_hint: true
+        title: get-flight-details
+      description: Fetch more details about a flight
+      method: GET
+      parameters:
+      - description: The flight number
+        in: path
+        name: flightNumber
+        required: true
+        schema:
+          type: string
+      path: /flights/{flightNumber}/details
+  name: ai-mcp-proxy
+monitoring:
+  config:
+    mode: conversion-listener
+    server:
+      forward_client_headers: true
+      tags:
+      - monitoring
+      timeout: 60000
+    tools:
+    - annotations:
+        read_only_hint: true
+        title: flights-health-check
+      description: Health check endpoint
+      method: GET
+      path: /health
+  name: ai-mcp-proxy

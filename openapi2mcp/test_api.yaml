@@ -1,0 +1,102 @@
+openapi: 3.0.0
+info:
+  title: Air Miles API
+  version: 1.0.0
+  description: API for managing air miles and member information
+
+paths:
+  /miles/tiers:
+    get:
+      summary: Get tiers
+      operationId: getTiers
+      description: Retrieve all available air miles tiers
+      responses:
+        '200':
+          description: List of tiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    benefits:
+                      type: array
+                      items:
+                        type: string
+
+  /miles/members/{id}:
+    get:
+      summary: Get member by id
+      operationId: getMemberById
+      description: Retrieve member details by member ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Member ID
+        - name: include
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of related resources to include
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  tier:
+                    type: string
+                  balance:
+                    type: integer
+
+  /miles/members:
+    post:
+      summary: Create new member
+      operationId: createMember
+      description: Register a new air miles member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '201':
+          description: Member created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  email:
+                    type: string
