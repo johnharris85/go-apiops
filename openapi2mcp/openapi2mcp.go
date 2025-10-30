@@ -20,6 +20,8 @@ type O2MCPOptions struct {
 	RouteName string
 	// Service name/ID for the ai-mcp-proxy plugin (mutually exclusive with RouteName)
 	ServiceName string
+	// Path prefix to prepend to all tool paths
+	PathPrefix string
 	// Mode for the MCP proxy
 	Mode string
 	// Server timeout in milliseconds
@@ -378,16 +380,34 @@ func Convert(content []byte, opts O2MCPOptions) (map[string]interface{}, error) 
 				continue
 			}
 
-			tool := MCPTool{
-				Method: methodKey,
-				Path:   pathKey,
+			// Prepend path prefix if configured
+			toolPath := pathKey
+			if opts.PathPrefix != "" {
+				// Ensure prefix starts with / and doesn't end with /
+				prefix := opts.PathPrefix
+				if !strings.HasPrefix(prefix, "/") {
+					prefix = "/" + prefix
+				}
+				prefix = strings.TrimSuffix(prefix, "/")
+
+				// Ensure path starts with /
+				if !strings.HasPrefix(toolPath, "/") {
+					toolPath = "/" + toolPath
+				}
+
+				toolPath = prefix + toolPath
 			}
 
-			// Set description from operation summary or description
-			if operation.Summary != "" {
-				tool.Description = operation.Summary
-			} else if operation.Description != "" {
+			tool := MCPTool{
+				Method: methodKey,
+				Path:   toolPath,
+			}
+
+			// Set description from operation description or summary
+			if operation.Description != "" {
 				tool.Description = operation.Description
+			} else if operation.Summary != "" {
+				tool.Description = operation.Summary
 			} else {
 				tool.Description = fmt.Sprintf("%s %s", methodKey, pathKey)
 			}

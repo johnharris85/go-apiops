@@ -40,7 +40,10 @@ func executeOpenapi2MCP(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("cannot specify both --route-name and --service-name; they are mutually exclusive")
 	}
 
-	
+	pathPrefix, err := cmd.Flags().GetString("path-prefix")
+	if err != nil {
+		return fmt.Errorf("failed getting cli argument 'path-prefix'; %w", err)
+	}
 
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
@@ -83,6 +86,7 @@ func executeOpenapi2MCP(cmd *cobra.Command, _ []string) error {
 	options := openapi2mcp.O2MCPOptions{
 		RouteName:            routeName,
 		ServiceName:          serviceName,
+		PathPrefix:           pathPrefix,
 		Mode:                 mode,
 		ServerTimeout:        serverTimeout,
 		LogStatistics:        logStatistics,
@@ -148,7 +152,8 @@ func init() {
 		"the route name/ID to associate with the ai-mcp-proxy plugin (mutually exclusive with --service-name)")
 	openapi2mcpCmd.Flags().StringP("service-name", "", "",
 		"the service name/ID to associate with the ai-mcp-proxy plugin (mutually exclusive with --route-name)")
-	
+	openapi2mcpCmd.Flags().StringP("path-prefix", "", "",
+		"path prefix to prepend to all tool paths (e.g., /api/v1)")
 	openapi2mcpCmd.Flags().StringP("mode", "", "conversion-listener",
 		"the mode of the MCP proxy (conversion-listener, conversion-only, listener, passthrough-listener)")
 	openapi2mcpCmd.Flags().IntP("server-timeout", "", 60000,

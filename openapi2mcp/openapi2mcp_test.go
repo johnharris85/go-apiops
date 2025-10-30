@@ -497,6 +497,120 @@ paths:
 		})
 	})
 
+	Context("with path prefix", func() {
+		It("should prepend prefix to all tool paths", func() {
+			spec := []byte(`
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      tags:
+        - mcp:api
+      responses:
+        '200':
+          description: Success
+  /items/{id}:
+    get:
+      tags:
+        - mcp:api
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+`)
+
+			opts := openapi2mcp.O2MCPOptions{
+				PathPrefix: "/api/v1",
+			}
+			result, err := openapi2mcp.Convert(spec, opts)
+			Expect(err).NotTo(HaveOccurred())
+
+			plugin := getPluginByTag(result, "api")
+			Expect(plugin).NotTo(BeNil())
+
+			config := plugin["config"].(map[string]interface{})
+			tools := config["tools"].([]interface{})
+			Expect(len(tools)).To(Equal(2))
+
+			// Check paths have prefix
+			tool1 := tools[0].(map[string]interface{})
+			Expect(tool1["path"]).To(Equal("/api/v1/items/{id}"))
+
+			tool2 := tools[1].(map[string]interface{})
+			Expect(tool2["path"]).To(Equal("/api/v1/users"))
+		})
+
+		It("should normalize prefix without leading slash", func() {
+			spec := []byte(`
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      tags:
+        - mcp:api
+      responses:
+        '200':
+          description: Success
+`)
+
+			opts := openapi2mcp.O2MCPOptions{
+				PathPrefix: "api/v1", // No leading slash
+			}
+			result, err := openapi2mcp.Convert(spec, opts)
+			Expect(err).NotTo(HaveOccurred())
+
+			plugin := getPluginByTag(result, "api")
+			config := plugin["config"].(map[string]interface{})
+			tools := config["tools"].([]interface{})
+			tool := tools[0].(map[string]interface{})
+
+			// Should add leading slash
+			Expect(tool["path"]).To(Equal("/api/v1/users"))
+		})
+
+		It("should normalize prefix with trailing slash", func() {
+			spec := []byte(`
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      tags:
+        - mcp:api
+      responses:
+        '200':
+          description: Success
+`)
+
+			opts := openapi2mcp.O2MCPOptions{
+				PathPrefix: "/api/v1/", // Trailing slash
+			}
+			result, err := openapi2mcp.Convert(spec, opts)
+			Expect(err).NotTo(HaveOccurred())
+
+			plugin := getPluginByTag(result, "api")
+			config := plugin["config"].(map[string]interface{})
+			tools := config["tools"].([]interface{})
+			tool := tools[0].(map[string]interface{})
+
+			// Should remove trailing slash
+			Expect(tool["path"]).To(Equal("/api/v1/users"))
+		})
+	})
+
 	Describe("MustConvert", func() {
 		// Note: MustConvert calls log.Fatal which exits the process, so we can't test panics directly
 		// We only test the success case
